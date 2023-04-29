@@ -23,17 +23,17 @@ classes = []
 intent_doc = {}
 
 for intent in intents['intents']:
-    if intent['tag'] not in classes:
-        classes.append(intent['tag'])
-    if intent['tag'] not in intent_doc:
-        intent_doc[intent['tag']] = []
+    if intent['intent'] not in classes:
+        classes.append(intent['intent'])
+    if intent['intent'] not in intent_doc:
+        intent_doc[intent['intent']] = []
         
-    for text in intent['patterns']:
+    for text in intent['text']:
         inputs.append(preprocessing(text))
-        targets.append(intent['tag'])
+        targets.append(intent['intent'])
         
     for response in intent['responses']:
-        intent_doc[intent['tag']].append(response)
+        intent_doc[intent['intent']].append(response)
 
 def tokenize_data(input_list):
     tokenizer = tf.keras.preprocessing.text.Tokenizer(filters='', oov_token='<unk>')
