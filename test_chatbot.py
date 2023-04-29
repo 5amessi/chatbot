@@ -5,11 +5,25 @@ import tensorflow as tf
 import random
 from flask import Flask
 from flask_restx import Resource, Api
+import spacy
+import python_weather
+import asyncio
+import os
 
 app = Flask(__name__)
 api = Api(app)
+nlp = spacy.load("en_core_web_sm")
 
-with open('intents.json') as f:
+
+async def getweather(gpe):
+  # declare the client. the measuring unit used defaults to the metric system (celcius, km/h, etc.)
+  async with python_weather.Client(unit=python_weather.IMPERIAL) as client:
+    # fetch a weather forecast from a city
+    weather = await client.get(gpe)
+    
+    return weather.current.temperature
+
+with open('Intent.json') as f:
     intents = json.load(f)
 
 def preprocessing(line):
@@ -85,10 +99,22 @@ def response(sentence):
     pred = model(sent_seq)
 
     pred_class = np.argmax(pred.numpy(), axis=1)
-    print("pred_class", pred_class)
     
     # choice a random response for predicted sentence
-    return random.choice(intent_doc[trg_index_word[pred_class[0]]]), trg_index_word[pred_class[0]]
+    answer =  random.choice(intent_doc[trg_index_word[pred_class[0]]]), trg_index_word[pred_class[0]]
+    answer = answer[0]
+    print(answer)
+    print(type(answer))
+    doc = nlp(sentence)
+
+    for ent in doc.ents:
+        v = "%%"+ent.label_+"%%"
+        if v in answer:
+            if ent.label_ == "GPE":
+                temp = asyncio.run(getweather(ent.text))
+                answer = answer.replace("%%TEMP%%" ,str(temp))
+            answer = answer.replace(v ,ent.text)
+    return answer
 
 
 @api.route('/chatbot/<string:message>')

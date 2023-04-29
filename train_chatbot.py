@@ -3,7 +3,7 @@ import json
 import re
 import tensorflow as tf
 
-with open('intents.json') as f:
+with open('Intent.json') as f:
     intents = json.load(f)
 
 def preprocessing(line):
